@@ -21,252 +21,267 @@ License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 <template>
 	<NcAppSidebar v-model:active="activeTab"
-		:name="summary"
-		:name-editable="editingSummary"
-		:linkify-name="true"
-		:subname="subsummary"
-		:title="summary"
-		:subtitle="subsummaryTooltip"
-		:empty="!task"
-		@start-editing="newSummary = task.summary"
-		@update:name-editable="editSummary"
-		@update:name="updateSummary"
-		@submit-name="saveSummary()"
-		@close="closeAppSidebar()">
+				  :name="summary"
+				  :name-editable="editingSummary"
+				  :linkify-name="true"
+				  :subname="subsummary"
+				  :title="summary"
+				  :subtitle="subsummaryTooltip"
+				  :empty="!task"
+				  @start-editing="newSummary = task.summary"
+				  @update:name-editable="editSummary"
+				  @update:name="updateSummary"
+				  @submit-name="saveSummary()"
+				  @close="closeAppSidebar()">
 		<template v-if="task" #description>
 			<DateTimePickerItem v-show="!readOnly || task.start"
-				:date="task.startMoment"
-				:value="newStartDate"
-				:all-day="allDay"
-				:property-string="startDateString"
-				:read-only="readOnly"
-				:task="task"
-				@editing="(editing) => editingStart = editing"
-				@set-value="setStartDate">
+								:date="task.startMoment"
+								:value="newStartDate"
+								:all-day="allDay"
+								:property-string="startDateString"
+								:read-only="readOnly"
+								:task="task"
+								@editing="(editing) => editingStart = editing"
+								@set-value="setStartDate">
 				<template #icon>
-					<CalendarStart :size="20" />
+					<CalendarStart :size="20"/>
 				</template>
 			</DateTimePickerItem>
 			<DateTimePickerItem v-show="!readOnly || task.due"
-				:date="task.dueMoment"
-				:value="newDueDate"
-				:all-day="allDay"
-				:property-string="dueDateString"
-				:read-only="readOnly"
-				:task="task"
-				@editing="(editing) => editingDue = editing"
-				@set-value="setDueDate">
+								:date="task.dueMoment"
+								:value="newDueDate"
+								:all-day="allDay"
+								:property-string="dueDateString"
+								:read-only="readOnly"
+								:task="task"
+								@editing="(editing) => editingDue = editing"
+								@set-value="setDueDate">
 				<template #icon>
-					<CalendarEnd :size="20" />
+					<CalendarEnd :size="20"/>
+				</template>
+			</DateTimePickerItem>
+			<DateTimePickerItem v-show="!readOnly || task.due"
+								:date="task.dueMoment"
+								:value="newDueDate"
+								:all-day="allDay"
+								:property-string="repeatingString"
+								:read-only="readOnly"
+								:task="task"
+								@editing="(editing) => editingDue = editing"
+								@set-value="setDueDate">
+				<template #icon>
+					<RepeatIcon :size="20"/>
 				</template>
 			</DateTimePickerItem>
 			<CheckboxItem v-show="showAllDayToggle"
-				id="allDayToggle"
-				:checked="allDay"
-				:read-only="readOnly"
-				:property-string="t('tasks', 'All day')"
-				@set-checked="toggleAllDay(task)" />
+						  id="allDayToggle"
+						  :checked="allDay"
+						  :read-only="readOnly"
+						  :property-string="t('tasks', 'All day')"
+						  @set-checked="toggleAllDay(task)"/>
 			<CalendarPickerItem :disabled="readOnly"
-				:calendar="task.calendar"
-				:calendars="targetCalendars"
-				@change-calendar="changeCalendar" />
+								:calendar="task.calendar"
+								:calendars="targetCalendars"
+								@change-calendar="changeCalendar"/>
 		</template>
 
 		<template v-if="!task || (task && task.deleteCountdown === null)" #secondary-actions>
 			<NcActionButton v-if="!readOnly"
-				@click="togglePinned(task)">
+							@click="togglePinned(task)">
 				<template v-if="task.pinned" #icon>
-					<PinOff :size="20" />
+					<PinOff :size="20"/>
 				</template>
 				<template v-else #icon>
-					<Pin :size="20" />
+					<Pin :size="20"/>
 				</template>
 				{{ task.pinned ? t('tasks', 'Unpin') : t('tasks', 'Pin') }}
 			</NcActionButton>
 			<NcActionLink v-if="showInCalendar"
-				:href="calendarLink"
-				:close-after-click="true"
-				target="_blank">
+						  :href="calendarLink"
+						  :close-after-click="true"
+						  target="_blank">
 				<template #icon>
-					<Calendar :size="20" />
+					<Calendar :size="20"/>
 				</template>
 				{{ t('tasks', 'Show in Calendar') }}
 			</NcActionLink>
 			<NcActionLink v-if="deckLink"
-				:href="deckLink"
-				:close-after-click="true"
-				target="_blank">
+						  :href="deckLink"
+						  :close-after-click="true"
+						  target="_blank">
 				<template #icon>
-					<span class="material-design-icon icon-deck" />
+					<span class="material-design-icon icon-deck"/>
 				</template>
 				{{ t('tasks', 'Show in Deck') }}
 			</NcActionLink>
 			<NcActionButton v-if="!readOnly"
-				:close-after-click="true"
-				@click="editSummary(true)">
+							:close-after-click="true"
+							@click="editSummary(true)">
 				<template #icon>
-					<Pencil :size="20" />
+					<Pencil :size="20"/>
 				</template>
 				{{ t('tasks', 'Edit summary') }}
 			</NcActionButton>
 			<NcActionLink :href="downloadURL"
-				:close-after-click="true">
+						  :close-after-click="true">
 				<template #icon>
-					<Download :size="20" />
+					<Download :size="20"/>
 				</template>
 				{{ t('tasks', 'Export') }}
 			</NcActionLink>
 			<NcActionButton v-if="!readOnly"
-				@click="scheduleTaskDeletion(task)">
+							@click="scheduleTaskDeletion(task)">
 				<template #icon>
-					<Delete :size="20" />
+					<Delete :size="20"/>
 				</template>
 				{{ t('tasks', 'Delete') }}
 			</NcActionButton>
 		</template>
 		<template v-else #secondary-actions>
 			<NcActionButton class="reactive no-nav"
-				@click.prevent.stop="clearTaskDeletion(task)">
+							@click.prevent.stop="clearTaskDeletion(task)">
 				<template #icon>
-					<Undo :size="20" />
+					<Undo :size="20"/>
 				</template>
-				{{ n('tasks', 'Deleting the task in {countdown} second', 'Deleting the task in {countdown} seconds', task.deleteCountdown, { countdown: task.deleteCountdown }) }}
+				{{
+					n('tasks', 'Deleting the task in {countdown} second', 'Deleting the task in {countdown} seconds', task.deleteCountdown, {countdown: task.deleteCountdown})
+				}}
 			</NcActionButton>
 		</template>
 
 		<template #tertiary-actions>
 			<TaskCheckbox :completed="task.completed"
-				:cancelled="task.status === 'CANCELLED'"
-				:read-only="readOnly"
-				:priority-class="priorityClass"
-				@toggle-completed="toggleCompleted(task)" />
+						  :cancelled="task.status === 'CANCELLED'"
+						  :read-only="readOnly"
+						  :priority-class="priorityClass"
+						  @toggle-completed="toggleCompleted(task)"/>
 		</template>
 
 		<NcAppSidebarTab v-if="task"
-			id="app-sidebar-tab-details"
-			class="app-sidebar-tab"
-			:name="t('tasks', 'Details')"
-			:order="0">
+						 id="app-sidebar-tab-details"
+						 class="app-sidebar-tab"
+						 :name="t('tasks', 'Details')"
+						 :order="0">
 			<template #icon>
-				<InformationOutline :size="20" />
+				<InformationOutline :size="20"/>
 			</template>
 			<div>
 				<MultiselectItem v-show="!readOnly || task.class !== 'PUBLIC'"
-					:value="classSelect.find( _ => _.type === task.class )"
-					:options="classSelect"
-					:disabled="readOnly || task.calendar.isSharedWithMe"
-					:title="task.calendar.isSharedWithMe ? t('tasks', 'Selecting a classification is forbidden, because the task was shared with you.') : null"
-					:placeholder="t('tasks', 'Select a classification')"
-					icon="IconEye"
-					@change-value="changeClass" />
+								 :value="classSelect.find( _ => _.type === task.class )"
+								 :options="classSelect"
+								 :disabled="readOnly || task.calendar.isSharedWithMe"
+								 :title="task.calendar.isSharedWithMe ? t('tasks', 'Selecting a classification is forbidden, because the task was shared with you.') : null"
+								 :placeholder="t('tasks', 'Select a classification')"
+								 icon="IconEye"
+								 @change-value="changeClass"/>
 				<MultiselectItem v-show="!readOnly || task.status"
-					:value="statusOptions.find( _ => _.type === task.status )"
-					:options="statusOptions"
-					:disabled="readOnly"
-					:placeholder="t('tasks', 'Select a status')"
-					icon="IconPulse"
-					@change-value="changeStatus" />
+								 :value="statusOptions.find( _ => _.type === task.status )"
+								 :options="statusOptions"
+								 :disabled="readOnly"
+								 :placeholder="t('tasks', 'Select a status')"
+								 icon="IconPulse"
+								 @change-value="changeStatus"/>
 				<DateTimePickerItem v-show="task.completed"
-					:date="task.completedDateMoment"
-					:value="newCompletedDate"
-					:property-string="completedString"
-					:read-only="readOnly"
-					:task="task"
-					:check-overdue="false"
-					@set-value="changeCompletedDate">
+									:date="task.completedDateMoment"
+									:value="newCompletedDate"
+									:property-string="completedString"
+									:read-only="readOnly"
+									:task="task"
+									:check-overdue="false"
+									@set-value="changeCompletedDate">
 					<template #icon>
-						<CalendarCheck :size="20" />
+						<CalendarCheck :size="20"/>
 					</template>
 				</DateTimePickerItem>
 				<SliderItem v-show="!readOnly || task.priority"
-					:value="task.priority"
-					:property-string="priorityString"
-					:read-only="readOnly"
-					:min-value="0"
-					:max-value="9"
-					:color="priorityColor"
-					:task="task"
-					@set-value="({task, value}) => setPriority({ task, priority: value })">
+							:value="task.priority"
+							:property-string="priorityString"
+							:read-only="readOnly"
+							:min-value="0"
+							:max-value="9"
+							:color="priorityColor"
+							:task="task"
+							@set-value="({task, value}) => setPriority({ task, priority: value })">
 					<template #icon>
-						<Star :size="20" />
+						<Star :size="20"/>
 					</template>
 				</SliderItem>
 				<SliderItem v-show="!readOnly || task.complete"
-					:value="task.complete"
-					:property-string="completeString"
-					:read-only="readOnly"
-					:min-value="0"
-					:max-value="100"
-					:color="task.complete > 0 ? '#4271a6' : null"
-					:task="task"
-					@set-value="({task, value}) => setPercentComplete({ task, complete: value })">
+							:value="task.complete"
+							:property-string="completeString"
+							:read-only="readOnly"
+							:min-value="0"
+							:max-value="100"
+							:color="task.complete > 0 ? '#4271a6' : null"
+							:task="task"
+							@set-value="({task, value}) => setPercentComplete({ task, complete: value })">
 					<template #icon>
-						<Percent :size="20" />
+						<Percent :size="20"/>
 					</template>
 				</SliderItem>
 				<TextItem v-show="!readOnly || task.location"
-					:value="task.location"
-					:property-string="task.location || t('tasks', 'Set a location')"
-					:read-only="readOnly"
-					:color="task.location ? '#4271a6' : null"
-					:task="task"
-					@set-value="({task, value}) => setLocation({ task, location: value })">
+						  :value="task.location"
+						  :property-string="task.location || t('tasks', 'Set a location')"
+						  :read-only="readOnly"
+						  :color="task.location ? '#4271a6' : null"
+						  :task="task"
+						  @set-value="({task, value}) => setLocation({ task, location: value })">
 					<template #icon>
-						<MapMarker :size="20" />
+						<MapMarker :size="20"/>
 					</template>
 				</TextItem>
 				<TextItem v-show="!readOnly || task.customUrl"
-					:value="task.customUrl"
-					:property-string="task.customUrl || t('tasks', 'Set a URL')"
-					:read-only="readOnly"
-					:color="task.customUrl ? '#4271a6' : null"
-					:task="task"
-					@set-value="({task, value}) => setUrl({ task, url: value })">
+						  :value="task.customUrl"
+						  :property-string="task.customUrl || t('tasks', 'Set a URL')"
+						  :read-only="readOnly"
+						  :color="task.customUrl ? '#4271a6' : null"
+						  :task="task"
+						  @set-value="({task, value}) => setUrl({ task, url: value })">
 					<template #icon>
-						<Web :size="20" />
+						<Web :size="20"/>
 					</template>
 				</TextItem>
 				<TagsItem v-show="!readOnly || task.tags.length > 0"
-					:options="tags"
-					:tags="task.tags"
-					:disabled="readOnly"
-					:placeholder="t('tasks', 'Select tags')"
-					icon="TagMultiple"
-					@add-tag="updateTag"
-					@set-tags="updateTags" />
+						  :options="tags"
+						  :tags="task.tags"
+						  :disabled="readOnly"
+						  :placeholder="t('tasks', 'Select tags')"
+						  icon="TagMultiple"
+						  @add-tag="updateTag"
+						  @set-tags="updateTags"/>
 				<AlarmList :alarms="task.alarms"
-					:has-start-date="hasStartDate"
-					:has-due-date="hasDueDate"
-					:all-day="allDay"
-					:read-only="readOnly"
-					@add-alarm="addAlarmItem"
-					@update-alarm="updateAlarmItem"
-					@remove-alarm="removeAlarmItem">
+						   :has-start-date="hasStartDate"
+						   :has-due-date="hasDueDate"
+						   :all-day="allDay"
+						   :read-only="readOnly"
+						   @add-alarm="addAlarmItem"
+						   @update-alarm="updateAlarmItem"
+						   @remove-alarm="removeAlarmItem">
 					<template #icon>
-						<Bell :size="20" />
+						<Bell :size="20"/>
 					</template>
 				</AlarmList>
 			</div>
 		</NcAppSidebarTab>
 		<NcEmptyContent v-else :description="taskStatusLabel">
 			<template #icon>
-				<NcLoadingIcon v-if="loading" />
-				<Magnify v-else />
+				<NcLoadingIcon v-if="loading"/>
+				<Magnify v-else/>
 			</template>
 		</NcEmptyContent>
 		<NcAppSidebarTab v-if="task && (!readOnly || task.note)"
-			id="app-sidebar-tab-notes"
-			class="app-sidebar-tab"
-			:name="t('tasks', 'Notes')"
-			:order="1">
+						 id="app-sidebar-tab-notes"
+						 class="app-sidebar-tab"
+						 :name="t('tasks', 'Notes')"
+						 :order="1">
 			<template #icon>
-				<TextBoxOutline :size="20" />
+				<TextBoxOutline :size="20"/>
 			</template>
 			<NotesItem v-show="!readOnly || task.note"
-				:value="task.note"
-				:read-only="readOnly"
-				:task="task"
-				@set-value="({task, value}) => setNote({ task, note: value })" />
+					   :value="task.note"
+					   :read-only="readOnly"
+					   :task="task"
+					   @set-value="({task, value}) => setNote({ task, note: value })"/>
 		</NcAppSidebarTab>
 	</NcAppSidebar>
 </template>
@@ -284,10 +299,10 @@ import NotesItem from '../components/AppSidebar/NotesItem.vue'
 import TaskCheckbox from '../components/TaskCheckbox.vue'
 // import TaskStatusDisplay from '../components/TaskStatusDisplay'
 import Task from '../models/task.js'
-import { startDateString, dueDateString } from '../utils/dateStrings.js'
+import {startDateString, dueDateString} from '../utils/dateStrings.js'
 
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import {subscribe, unsubscribe} from '@nextcloud/event-bus'
+import {translate as t, translatePlural as n} from '@nextcloud/l10n'
 import moment from '@nextcloud/moment'
 import NcActionButton from '@nextcloud/vue/components/NcActionButton'
 import NcActionLink from '@nextcloud/vue/components/NcActionLink'
@@ -295,12 +310,13 @@ import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
 import NcAppSidebar from '@nextcloud/vue/components/NcAppSidebar'
 import NcAppSidebarTab from '@nextcloud/vue/components/NcAppSidebarTab'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
-import { generateUrl } from '@nextcloud/router'
+import {generateUrl} from '@nextcloud/router'
 
 import Bell from 'vue-material-design-icons/Bell.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
 import CalendarEnd from 'vue-material-design-icons/CalendarEnd.vue'
+import RepeatIcon from 'vue-material-design-icons/Repeat.vue'
 import CalendarStart from 'vue-material-design-icons/CalendarStart.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Download from 'vue-material-design-icons/Download.vue'
@@ -316,7 +332,7 @@ import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import Undo from 'vue-material-design-icons/Undo.vue'
 import Web from 'vue-material-design-icons/Web.vue'
 
-import { mapGetters, mapActions } from 'vuex'
+import {mapGetters, mapActions} from 'vuex'
 
 export default {
 	components: {
@@ -332,6 +348,7 @@ export default {
 		Calendar,
 		CalendarEnd,
 		CalendarStart,
+		RepeatIcon,
 		CalendarCheck,
 		Delete,
 		Download,
@@ -568,7 +585,7 @@ export default {
 		 *
 		 * @return {Date|null} The completed date moment
 		 */
-		 newCompletedDate() {
+		newCompletedDate() {
 			const completedDate = this.task.completedDateMoment
 			if (completedDate.isValid()) {
 				return completedDate.toDate()
@@ -641,6 +658,15 @@ export default {
 				return t('tasks', 'Set due date')
 			}
 		},
+		repeatingString() {
+			if (this.task.rrule !== null) {
+				// TODO: Translation
+				return t('tasks', this.task.rrule.freq)
+			} else {
+				// TODO: Translation
+				return t('tasks', 'Set repeat cycle')
+			}
+		},
 		showAllDayToggle() {
 			return !this.readOnly && (this.task.due || this.task.start || this.editingStart || this.editingDue)
 		},
@@ -658,13 +684,13 @@ export default {
 		},
 		priorityString() {
 			if (+this.task.priority > 5) {
-				return t('tasks', 'Priority {priority}: low', { priority: this.task.priority })
+				return t('tasks', 'Priority {priority}: low', {priority: this.task.priority})
 			}
 			if (+this.task.priority === 5) {
-				return t('tasks', 'Priority {priority}: medium', { priority: this.task.priority })
+				return t('tasks', 'Priority {priority}: medium', {priority: this.task.priority})
 			}
 			if (+this.task.priority > 0) {
-				return t('tasks', 'Priority {priority}: high', { priority: this.task.priority })
+				return t('tasks', 'Priority {priority}: high', {priority: this.task.priority})
 			}
 			return t('tasks', 'No priority assigned')
 		},
@@ -681,7 +707,7 @@ export default {
 			return null
 		},
 		completeString() {
-			return t('tasks', '{percent} % completed', { percent: this.task.complete })
+			return t('tasks', '{percent} % completed', {percent: this.task.complete})
 		},
 		targetCalendars() {
 			let calendars = this.writableCalendars
@@ -762,7 +788,7 @@ export default {
 				for (const calendar of calendars) {
 					this.loading = true
 					try {
-						const task = await this.getTaskByUri({ calendar, taskUri })
+						const task = await this.getTaskByUri({calendar, taskUri})
 						// If we found the task, we don't need to query the other calendars.
 						if (task) {
 							break
@@ -775,7 +801,7 @@ export default {
 			}
 		},
 
-		handleTaskDeletion({ taskId }) {
+		handleTaskDeletion({taskId}) {
 			// Close the sidebar if the taskId matches
 			if (taskId === this.$route.params.taskId) {
 				this.closeAppSidebar()
@@ -785,9 +811,9 @@ export default {
 		closeAppSidebar() {
 			this.saveSummary()
 			if (this.$route.params.calendarId) {
-				this.$router.push({ name: 'calendars', params: { calendarId: this.$route.params.calendarId } })
+				this.$router.push({name: 'calendars', params: {calendarId: this.$route.params.calendarId}})
 			} else {
-				this.$router.push({ name: 'collections', params: { collectionId: this.$route.params.collectionId } })
+				this.$router.push({name: 'collections', params: {collectionId: this.$route.params.collectionId}})
 			}
 		},
 
@@ -812,7 +838,7 @@ export default {
 
 		saveSummary(task = this.task) {
 			if (!this.summarySaved && this.newSummary !== task.summary) {
-				this.setSummary({ task, summary: this.newSummary })
+				this.setSummary({task, summary: this.newSummary})
 			}
 			this.summarySaved = true
 		},
@@ -825,14 +851,14 @@ export default {
 		 * @param {Task} context.task The task for which to set the date
 		 * @param {Date} context.value The new start date
 		 */
-		setStartDate({ task, value: start }) {
+		setStartDate({task, value: start}) {
 			if (start) {
 				start = moment(start)
 			}
 			if (this.task.startMoment.isSame(start)) {
 				return
 			}
-			this.setStart({ task, start, allDay: this.allDay })
+			this.setStart({task, start, allDay: this.allDay})
 		},
 
 		/**
@@ -843,14 +869,14 @@ export default {
 		 * @param {Task} context.task The task for which to set the date
 		 * @param {Date} context.value The new due date
 		 */
-		setDueDate({ task, value: due }) {
+		setDueDate({task, value: due}) {
 			if (due) {
 				due = moment(due)
 			}
 			if (this.task.dueMoment.isSame(due)) {
 				return
 			}
-			this.setDue({ task, due, allDay: this.allDay })
+			this.setDue({task, due, allDay: this.allDay})
 		},
 
 		/**
@@ -860,22 +886,22 @@ export default {
 		 * @param {Task} context.task The task for which to set the date
 		 * @param {Date|null} context.value The new completed date
 		 */
-		 changeCompletedDate({ task, value: completedDate }) {
+		changeCompletedDate({task, value: completedDate}) {
 			if (completedDate) {
 				completedDate = moment(completedDate)
 			}
 			if (this.task.completedDateMoment.isSame(completedDate)) {
 				return
 			}
-			this.setCompletedDate({ task, completedDate })
+			this.setCompletedDate({task, completedDate})
 		},
 
 		changeClass(classification) {
-			this.setClassification({ task: this.task, classification: classification.type })
+			this.setClassification({task: this.task, classification: classification.type})
 		},
 
 		changeStatus(status) {
-			this.setStatus({ task: this.task, status: status.type })
+			this.setStatus({task: this.task, status: status.type})
 		},
 
 		/**
@@ -884,7 +910,7 @@ export default {
 		 * @param {Array} tags The new tags
 		 */
 		updateTags(tags) {
-			this.setTags({ task: this.task, tags })
+			this.setTags({task: this.task, tags})
 		},
 
 		/**
@@ -893,7 +919,7 @@ export default {
 		 * @param {string} tag The name of the tag to add
 		 */
 		updateTag(tag) {
-			this.addTag({ task: this.task, tag })
+			this.addTag({task: this.task, tag})
 		},
 
 		/**
@@ -902,7 +928,7 @@ export default {
 		 * @param {object} alarm The alarm to add
 		 */
 		addAlarmItem(alarm) {
-			this.addAlarm({ task: this.task, alarm })
+			this.addAlarm({task: this.task, alarm})
 		},
 
 		/**
@@ -912,7 +938,7 @@ export default {
 		 * @param {number} index The index of the alarm-item to update
 		 */
 		updateAlarmItem(alarm, index) {
-			this.updateAlarm({ task: this.task, alarm, index })
+			this.updateAlarm({task: this.task, alarm, index})
 		},
 
 		/**
@@ -921,14 +947,14 @@ export default {
 		 * @param {number} index The index of the alarm-item to remove
 		 */
 		removeAlarmItem(index) {
-			this.removeAlarm({ task: this.task, index })
+			this.removeAlarm({task: this.task, index})
 		},
 
 		async changeCalendar(calendar) {
-			const task = await this.moveTask({ task: this.task, calendar })
+			const task = await this.moveTask({task: this.task, calendar})
 			// If we are in a calendar view, we have to navigate to the new calendar.
 			if (this.$route.params.calendarId) {
-				this.$router.push({ name: 'calendarsTask', params: { calendarId: task.calendar.id, taskId: task.uri } })
+				this.$router.push({name: 'calendarsTask', params: {calendarId: task.calendar.id, taskId: task.uri}})
 			}
 		},
 	},

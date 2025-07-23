@@ -35,28 +35,28 @@ License along with this library. If not, see <http://www.gnu.org/licenses/>.
 		class="task-item"
 		@dragstart="dragStart($event)">
 		<div :task-id="task.uri"
-			:class="{'task-item__body--active': isTaskOpen()}"
-			class="task-item__body reactive"
-			type="task"
-			@click="navigate($event)">
+			 :class="{'task-item__body--active': isTaskOpen()}"
+			 class="task-item__body reactive"
+			 type="task"
+			 @click="navigate($event)">
 			<!-- Checkbox -->
 			<TaskCheckbox :completed="task.completed"
-				class="no-nav"
-				:cancelled="task.status === 'CANCELLED'"
-				:read-only="readOnly"
-				:priority-class="priorityClass"
-				@toggle-completed="toggleCompleted(task)" />
+						  class="no-nav"
+						  :cancelled="task.status === 'CANCELLED'"
+						  :read-only="readOnly"
+						  :priority-class="priorityClass"
+						  @toggle-completed="toggleCompleted(task)"/>
 			<!-- Info: summary, progress & tags -->
 			<div class="task-body__info"
-				@dblclick="editSummary()">
+				 @dblclick="editSummary()">
 				<div class="summary">
-					<span v-linkify="{text: task.summary, linkify: true}" />
+					<span v-linkify="{text: task.summary, linkify: true}"/>
 				</div>
 				<div v-if="task.tags.length > 0" class="tags-list">
 					<span v-for="(tag, index) in task.tags"
-						:key="index"
-						class="tag no-nav"
-						@click="addTagToFilter(tag)">
+						  :key="index"
+						  class="tag no-nav"
+						  @click="addTagToFilter(tag)">
 						<span :title="tag" class="tag-label">
 							{{ tag }}
 						</span>
@@ -66,81 +66,94 @@ License along with this library. If not, see <http://www.gnu.org/licenses/>.
 			<!-- Icons: sync-status, calendarname, date, note, subtask-show-completed, subtask-visibility, add-subtask, starred -->
 			<div class="task-body__icons">
 				<TaskStatusDisplay :status="task.syncStatus"
-					class="reactive no-nav"
-					@status-clicked="updateTask"
-					@reset-status="resetStatus({ task })" />
+								   class="reactive no-nav"
+								   @status-clicked="updateTask"
+								   @reset-status="resetStatus({ task })"/>
 				<div v-if="collectionId=='week'" class="calendar">
-					<span :style="{'background-color': task.calendar.color}" class="calendar__indicator" />
+					<span :style="{'background-color': task.calendar.color}" class="calendar__indicator"/>
 					<span class="calendar__name">{{ task.calendar.displayName }}</span>
 				</div>
-				<SortVariant v-if="hasHiddenSubtasks" :size="20" :title="t('tasks', 'Task has hidden subtasks')" />
-				<CalendarClock v-if="!overdue(task.startMoment) && task.start" :size="20" :title="startDateString(task)" />
-				<Pin v-if="task.pinned" :size="20" :title="t('tasks', 'Task is pinned')" />
+				<SortVariant v-if="hasHiddenSubtasks" :size="20" :title="t('tasks', 'Task has hidden subtasks')"/>
+				<CalendarClock v-if="!overdue(task.startMoment) && task.start" :size="20"
+							   :title="startDateString(task)"/>
+				<Pin v-if="task.pinned" :size="20" :title="t('tasks', 'Task is pinned')"/>
 				<TextBoxOutline v-if="task.note!=''"
-					:size="20"
-					:title="t('tasks', 'Task has a note')"
-					@click="openAppSidebarTab($event, 'app-sidebar-tab-notes')"
-					@dblclick.stop="openAppSidebarTab($event, 'app-sidebar-tab-notes', true)" />
-				<div v-if="task.due || task.completed" :class="{'date--overdue': overdue(task.dueMoment) && !task.completed}" class="date">
-					<span class="date__short" :class="{ 'date__short--completed': task.completed }">{{ dueDateShort }}</span>
-					<span class="date__long" :class="{ 'date__long--date-only': task.allDay && !task.completed, 'date__long--completed': task.completed }">{{ dueDateLong }}</span>
+								:size="20"
+								:title="t('tasks', 'Task has a note')"
+								@click="openAppSidebarTab($event, 'app-sidebar-tab-notes')"
+								@dblclick.stop="openAppSidebarTab($event, 'app-sidebar-tab-notes', true)"/>
+				<div v-if="task.due || task.completed"
+					 :class="{'date--overdue': overdue(task.dueMoment) && !task.completed}" class="date">
+					<span class="date__short" :class="{ 'date__short--completed': task.completed }">{{
+							dueDateShort
+						}}</span>
+					<span class="date__long"
+						  :class="{ 'date__long--date-only': task.allDay && !task.completed, 'date__long--completed': task.completed }">{{
+							dueDateLong
+						}}</span>
 				</div>
 				<NcProgressBar v-if="task.complete > 0"
-					type="circular"
-					:value="task.complete"
-					:aria-label="t('tasks', '{complete} % completed', {complete: task.complete})"
-					:title="t('tasks', '{complete} % completed', {complete: task.complete})"
-					:color="task.calendar.color" />
-				<Bell v-if="task.alarms.length > 0" :size="20" :title="n('tasks', 'Task has one reminder', 'Task has {n} reminders', task.alarms.length, { n: task.alarms.length })" />
+							   type="circular"
+							   :value="task.complete"
+							   :aria-label="t('tasks', '{complete} % completed', {complete: task.complete})"
+							   :title="t('tasks', '{complete} % completed', {complete: task.complete})"
+							   :color="task.calendar.color"/>
+				<Bell v-if="task.alarms.length > 0" :size="20"
+					  :title="n('tasks', 'Task has one reminder', 'Task has {n} reminders', task.alarms.length, { n: task.alarms.length })"/>
 				<NcActions v-if="task.deleteCountdown === null" class="reactive no-nav" menu-align="right">
 					<NcActionButton v-if="!task.calendar.readOnly"
-						:close-after-click="true"
-						class="reactive no-nav open-input"
-						@click="openSubtaskInput">
+									:close-after-click="true"
+									class="reactive no-nav open-input"
+									@click="openSubtaskInput">
 						<template #icon>
-							<Plus :size="20" />
+							<Plus :size="20"/>
 						</template>
 						{{ t('tasks', 'Add subtask') }}
 					</NcActionButton>
 					<NcActionButton v-if="Object.values(task.subTasks).length"
-						class="reactive no-nav"
-						@click="toggleSubtasksVisibility(task)">
+									class="reactive no-nav"
+									@click="toggleSubtasksVisibility(task)">
 						<template #icon>
-							<SortVariant :size="20" />
+							<SortVariant :size="20"/>
 						</template>
 						{{ task.hideSubtasks ? t('tasks', 'Show subtasks') : t('tasks', 'Hide subtasks') }}
 					</NcActionButton>
 					<NcActionButton v-if="hasCompletedSubtasks"
-						class="reactive no-nav"
-						@click="toggleCompletedSubtasksVisibility(task)">
+									class="reactive no-nav"
+									@click="toggleCompletedSubtasksVisibility(task)">
 						<template #icon>
-							<Eye :size="20" />
+							<Eye :size="20"/>
 						</template>
-						{{ task.hideCompletedSubtasks ? t('tasks', 'Show closed subtasks') : t('tasks', 'Hide closed subtasks') }}
+						{{
+							task.hideCompletedSubtasks ? t('tasks', 'Show closed subtasks') : t('tasks', 'Hide closed subtasks')
+						}}
 					</NcActionButton>
 					<NcActionButton v-if="!readOnly"
-						class="reactive no-nav"
-						@click="scheduleTaskDeletion(task)">
+									class="reactive no-nav"
+									@click="scheduleTaskDeletion(task)">
 						<template #icon>
-							<Delete :size="20" />
+							<Delete :size="20"/>
 						</template>
 						{{ t('tasks', 'Delete task') }}
 					</NcActionButton>
 				</NcActions>
 				<NcActions v-if="task.deleteCountdown !== null">
 					<NcActionButton class="reactive no-nav"
-						@click.prevent.stop="clearTaskDeletion(task)">
+									@click.prevent.stop="clearTaskDeletion(task)">
 						<template #icon>
-							<Undo :size="20" />
+							<Undo :size="20"/>
 						</template>
-						{{ n('tasks', 'Deleting the task in {countdown} second', 'Deleting the task in {countdown} seconds', task.deleteCountdown, { countdown: task.deleteCountdown }) }}
+						{{
+							n('tasks', 'Deleting the task in {countdown} second', 'Deleting the task in {countdown} seconds', task.deleteCountdown, {countdown: task.deleteCountdown})
+						}}
 					</NcActionButton>
 				</NcActions>
-				<NcActions :disabled="readOnly" :class="[{ priority: task.priority }, priorityClass]" class="reactive no-nav">
+				<NcActions :disabled="readOnly" :class="[{ priority: task.priority }, priorityClass]"
+						   class="reactive no-nav">
 					<NcActionButton :disabled="readOnly"
-						@click="toggleStarred(task)">
+									@click="toggleStarred(task)">
 						<template #icon>
-							<Star :size="20" />
+							<Star :size="20"/>
 						</template>
 						{{ t('tasks', 'Toggle starred') }}
 					</NcActionButton>
@@ -149,54 +162,54 @@ License along with this library. If not, see <http://www.gnu.org/licenses/>.
 		</div>
 		<div class="task-item__subtasks">
 			<div v-if="showSubtaskInput"
-				v-click-outside="closeSubtaskInput"
-				class="task-item task-item__input">
+				 v-click-outside="closeSubtaskInput"
+				 class="task-item task-item__input">
 				<NcTextField ref="input"
-					v-model="newTaskName"
-					:placeholder="subtasksCreationPlaceholder"
-					:label-outside="true"
-					:disabled="isAddingTask"
-					autocomplete="off"
-					class="reactive"
-					trailing-button-icon="arrowRight"
-					:show-trailing-button="newTaskName !== ''"
-					:trailing-button-label="subtasksCreationPlaceholder"
-					@trailing-button-click="addTask"
-					@keyup.esc="showSubtaskInput = false"
-					@keyup.enter="addTask"
-					@paste.stop="addMultipleTasks">
+							 v-model="newTaskName"
+							 :placeholder="subtasksCreationPlaceholder"
+							 :label-outside="true"
+							 :disabled="isAddingTask"
+							 autocomplete="off"
+							 class="reactive"
+							 trailing-button-icon="arrowRight"
+							 :show-trailing-button="newTaskName !== ''"
+							 :trailing-button-label="subtasksCreationPlaceholder"
+							 @trailing-button-click="addTask"
+							 @keyup.esc="showSubtaskInput = false"
+							 @keyup.enter="addTask"
+							 @paste.stop="addMultipleTasks">
 					<template #icon>
-						<Plus :size="20" />
+						<Plus :size="20"/>
 					</template>
 				</NcTextField>
 			</div>
 			<TaskDragContainer :tasks="filteredSubtasksShown"
-				:disabled="task.calendar.readOnly"
-				:collection-string="collectionString"
-				:task-id="task.uri"
-				:calendar-id="task.calendar.uri" />
+							   :disabled="task.calendar.readOnly"
+							   :collection-string="collectionString"
+							   :task-id="task.uri"
+							   :calendar-id="task.calendar.uri"/>
 		</div>
 		<CreateMultipleTasksDialog v-if="showCreateMultipleTasksModal"
-			:root-task="task"
-			:calendar="task.calendar"
-			:tasks-to-create="multipleTasks"
-			:tasks-additional-properties="additionalTaskProperties"
-			@cancel="createMultipleTasksCancelled"
-			@close="createMultipleTasksSuccessful" />
+								   :root-task="task"
+								   :calendar="task.calendar"
+								   :tasks-to-create="multipleTasks"
+								   :tasks-additional-properties="additionalTaskProperties"
+								   @cancel="createMultipleTasksCancelled"
+								   @close="createMultipleTasksSuccessful"/>
 	</li>
 </template>
 
 <script>
-import { overdue, sort, searchSubTasks, isTaskInList } from '../store/storeHelper.js'
+import {overdue, sort, searchSubTasks, isTaskInList} from '../store/storeHelper.js'
 import TaskCheckbox from './TaskCheckbox.vue'
 import TaskStatusDisplay from './TaskStatusDisplay.vue'
 import TaskDragContainer from './TaskDragContainer.vue'
 import Task from '../models/task.js'
 import openNewTask from '../mixins/openNewTask.js'
-import { startDateString } from '../utils/dateStrings.js'
+import {startDateString} from '../utils/dateStrings.js'
 
-import { emit } from '@nextcloud/event-bus'
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import {emit} from '@nextcloud/event-bus'
+import {translate as t, translatePlural as n} from '@nextcloud/l10n'
 import moment from '@nextcloud/moment'
 import NcActions from '@nextcloud/vue/components/NcActions'
 import NcActionButton from '@nextcloud/vue/components/NcActionButton'
@@ -215,10 +228,10 @@ import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import Undo from 'vue-material-design-icons/Undo.vue'
 
-import { vOnClickOutside as ClickOutside } from '@vueuse/components'
-import { mapGetters, mapActions, mapMutations } from 'vuex'
+import {vOnClickOutside as ClickOutside} from '@vueuse/components'
+import {mapGetters, mapActions, mapMutations} from 'vuex'
 
-import { textToTask } from '../utils/textToTask.js'
+import {textToTask} from '../utils/textToTask.js'
 import CreateMultipleTasksDialog from './CreateMultipleTasksDialog.vue'
 
 export default {
@@ -264,7 +277,7 @@ export default {
 			newTaskName: '',
 			isAddingTask: false,
 			showCreateMultipleTasksModal: false,
-			multipleTasks: { numberOfTasks: 0, tasks: {} },
+			multipleTasks: {numberOfTasks: 0, tasks: {}},
 			additionalTaskProperties: {},
 		}
 	},
@@ -395,7 +408,10 @@ export default {
 		 * @return {string} the placeholder string to show
 		 */
 		subtasksCreationPlaceholder() {
-			return t('tasks', 'Add a subtask to "{task}"…', { task: this.task.summary }, undefined, { sanitize: false, escape: false })
+			return t('tasks', 'Add a subtask to "{task}"…', {task: this.task.summary}, undefined, {
+				sanitize: false,
+				escape: false
+			})
 		},
 
 		/**
@@ -427,10 +443,10 @@ export default {
 		 * @return {Array} the array with the subtasks to show
 		 */
 		filteredSubtasksShown() {
-			 if (this.showSubtasks) {
+			if (this.showSubtasks) {
 				return this.filteredSubtasks
-			 }
-			 return []
+			}
+			return []
 		},
 
 		/**
@@ -474,7 +490,7 @@ export default {
 
 	created() {
 		if (!this.task.loadedCompleted && this.$route.params.taskId === this.task.uri) {
-			this.getTasksFromCalendar({ calendar: this.task.calendar, completed: true, related: this.task.uid })
+			this.getTasksFromCalendar({calendar: this.task.calendar, completed: true, related: this.task.uid})
 		}
 	},
 
@@ -503,7 +519,7 @@ export default {
 
 		updateTask() {
 			if (this.task.syncStatus?.status === 'conflict') {
-				this.fetchFullTask({ task: this.task })
+				this.fetchFullTask({task: this.task})
 			}
 		},
 
@@ -585,7 +601,7 @@ export default {
 			if (!$event.target.closest('.no-nav')
 				&& (this.$route.params.taskId !== this.task.uri || this.$route.params.collectionParam !== this.collectionParam)) {
 				if (!this.task.loadedCompleted) {
-					this.getTasksFromCalendar({ calendar: this.task.calendar, completed: true, related: this.task.uid })
+					this.getTasksFromCalendar({calendar: this.task.calendar, completed: true, related: this.task.uid})
 				}
 				if (this.$route.params.calendarId) {
 					await this.$router.push({
@@ -658,14 +674,14 @@ export default {
 
 		createMultipleTasksCancelled() {
 			this.showCreateMultipleTasksModal = false
-			this.multipleTasks = { numberOfTasks: 0, tasks: {} }
+			this.multipleTasks = {numberOfTasks: 0, tasks: {}}
 			this.additionalTaskProperties = {}
 			this.openSubtaskInput()
 		},
 
 		createMultipleTasksSuccessful() {
 			this.showCreateMultipleTasksModal = false
-			this.multipleTasks = { numberOfTasks: 0, tasks: {} }
+			this.multipleTasks = {numberOfTasks: 0, tasks: {}}
 			this.additionalTaskProperties = {}
 			this.newTaskName = ''
 			this.openSubtaskInput()
@@ -735,6 +751,7 @@ $breakpoint-mobile: 1024px;
 
 	&--closed .task-item__body .task-body__info {
 		opacity: .6;
+
 		.summary {
 			text-decoration: line-through;
 		}
@@ -805,6 +822,7 @@ $breakpoint-mobile: 1024px;
 			border-bottom-left-radius: 0;
 			border-bottom-right-radius: 0;
 		}
+
 		.task-item__body {
 			border-bottom-left-radius: 0;
 			border-bottom-right-radius: 0;
@@ -906,6 +924,7 @@ $breakpoint-mobile: 1024px;
 				}
 
 			}
+
 			&__icons {
 				align-items: center;
 				display: flex;
@@ -1017,6 +1036,7 @@ $breakpoint-mobile: 1024px;
 						border-radius: 50%;
 						cursor: pointer
 					}
+
 					&__name {
 						max-width: 200px;
 						overflow: hidden;

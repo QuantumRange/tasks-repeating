@@ -27,7 +27,7 @@
 import moment from '@nextcloud/moment'
 
 import ICAL from 'ical.js'
-import { randomUUID } from '../utils/crypto.js'
+import {randomUUID} from '../utils/crypto.js'
 
 export default class Task {
 
@@ -120,6 +120,18 @@ export default class Task {
 		this._pinned = this.vtodo.getFirstPropertyValue('x-pinned') === 'true'
 		this._location = this.vtodo.getFirstPropertyValue('location') || ''
 		this._customUrl = this.vtodo.getFirstPropertyValue('url') || ''
+
+		// Can split by ';' without checks, because rfc5545 only uses ; for separation in RRULE (3.3.10)
+		/**
+		 * @type {Recur}
+		 * @private
+		 */
+		this._rrule = this.vtodo.getFirstPropertyValue('rrule') || null // <-- || null is redundant i think;
+
+		if (this._rrule != null) {
+			// TODO: is this._rrule at the first time a Recur already?
+			this._rrule = ICAL.Recur.fromString(this._rrule.toString());
+		}
 
 		let sortOrder = this.vtodo.getFirstPropertyValue('x-apple-sort-order')
 		if (sortOrder === null) {
@@ -437,7 +449,7 @@ export default class Task {
 			} else {
 				this.vtodo.removeProperty(parent)
 			}
-		// Otherwise create a new property, so we don't overwrite RELTYPE=CHILD/SIBLING entries.
+			// Otherwise create a new property, so we don't overwrite RELTYPE=CHILD/SIBLING entries.
 		} else {
 			if (related) {
 				this.vtodo.addPropertyWithValue('related-to', related)
@@ -537,6 +549,22 @@ export default class Task {
 		this._allDay = d !== null && d.isDate
 	}
 
+	get rrule() {
+		return this._rrule
+	}
+
+	set rrule(repeat) {
+		this.setRRule(repeat)
+	}
+
+	setRRule(recur) {
+		if (recur !== null) {
+			this.vtodo.updatePropertyWithValue('rrule', recur.toString())
+		} else {
+			this.vtodo.removeProperty('rrule')
+		}
+	}
+
 	get dueMoment() {
 		return this._dueMoment.clone()
 	}
@@ -593,7 +621,7 @@ export default class Task {
 	 *
 	 * @param {{ action: "AUDIO"|"DISPLAY"|"EMAIL"|"PROCEDURE", repeat: number, trigger: { value: ICAL.Duration|ICAL.Time, parameter: object }}} alarm The alarm
 	 */
-	addAlarm({ action, description, duration, repeat, trigger }) {
+	addAlarm({action, description, duration, repeat, trigger}) {
 		const valarm = new ICAL.Component('valarm')
 		valarm.addPropertyWithValue('action', action)
 		valarm.addPropertyWithValue('description', description)
@@ -611,7 +639,7 @@ export default class Task {
 		this._alarms = this.getAlarms()
 	}
 
-	updateAlarm({ action, repeat, trigger }, index) {
+	updateAlarm({action, repeat, trigger}, index) {
 		const valarms = this.vtodo.getAllSubcomponents('valarm')
 		const valarmToUpdate = valarms[index]
 
@@ -674,11 +702,11 @@ export default class Task {
 				const prop = new ICAL.Property('categories')
 				prop.setValues(newTags)
 				tags = this.vtodo.addProperty(prop)
-			// If there is only one tags property, overwrite it
+				// If there is only one tags property, overwrite it
 			} else if (tags.length < 2) {
 				tags[0].setValues(newTags)
-			// If there are multiple tags properties, we have to iterate over all
-			// and remove unwanted tags and add new ones
+				// If there are multiple tags properties, we have to iterate over all
+				// and remove unwanted tags and add new ones
 			} else {
 				const toRemove = this._tags.filter(c => !newTags.includes(c))
 				const toAdd = newTags.filter(c => !this._tags.includes(c))
