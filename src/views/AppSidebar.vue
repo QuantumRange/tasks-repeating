@@ -60,19 +60,28 @@ License along with this library. If not, see <http://www.gnu.org/licenses/>.
 					<CalendarEnd :size="20"/>
 				</template>
 			</DateTimePickerItem>
-			<DateTimePickerItem v-show="!readOnly || task.due"
-								:date="task.dueMoment"
-								:value="newDueDate"
-								:all-day="allDay"
-								:property-string="repeatingString"
-								:read-only="readOnly"
-								:task="task"
-								@editing="(editing) => editingDue = editing"
-								@set-value="setDueDate">
-				<template #icon>
+			<!--			<DateTimePickerItem v-show="!readOnly || task.due"-->
+			<!--								:date="task.dueMoment"-->
+			<!--								:value="newDueDate"-->
+			<!--								:all-day="task.rrule == null"-->
+			<!--								:property-string="repeatingString"-->
+			<!--								:read-only="readOnly"-->
+			<!--								:task="task"-->
+			<!--								@editing="(editing) => editingDue = editing"-->
+			<!--								@set-value="setDueDate">-->
+			<!--				<template #icon>-->
+			<!--					<RepeatIcon :size="20"/>-->
+			<!--				</template>-->
+			<!--			</DateTimePickerItem>-->
+			<CheckboxItem v-show="true"
+						  id="asdf"
+						  :checked="false"
+						  :read-only="true"
+						  :property-string="repeatingString">
+				<template #icon>-->
 					<RepeatIcon :size="20"/>
 				</template>
-			</DateTimePickerItem>
+			</CheckboxItem>
 			<CheckboxItem v-show="showAllDayToggle"
 						  id="allDayToggle"
 						  :checked="allDay"
@@ -660,10 +669,38 @@ export default {
 		},
 		repeatingString() {
 			if (this.task.rrule !== null) {
-				// TODO: Translation
-				return t('tasks', this.task.rrule.freq)
+				const defaultInterval = this.task.rrule.interval === 1;
+
+				const iCalToEnglishMap = {
+					'SECONDLY': 'Second',
+					'MINUTELY': 'Minute',
+					'HOURLY': 'Hour',
+					'DAILY': 'Day',
+					'WEEKLY': 'Week',
+					'MONTHLY': 'Month',
+					'YEARLY': 'Year',
+				}
+				let freqText = t('tasks', iCalToEnglishMap[this.task.rrule.freq] + (this.task.rrule.interval !== 1 ? 's' : ''))
+
+				let text = ""
+
+				// Repeats every interval? freq
+				text += defaultInterval ?
+					t('tasks', 'Repeats every {freq}', {freq: freqText})
+					: t('tasks', 'Repeats every {interval} {freq}', {
+						interval: this.task.rrule.interval,
+						freq: freqText
+					})
+
+				// TODO: on <month/day, etc.>
+
+				// , occurs ... times
+				if (this.task.rrule.count !== null) {
+					text += t('tasks', ', occurs {count} times', {count: this.task.rrule.count})
+				}
+
+				return this.task.rrule.toString()
 			} else {
-				// TODO: Translation
 				return t('tasks', 'Set repeat cycle')
 			}
 		},

@@ -1,0 +1,7 @@
+- [ ] Translations (DeepL?)
+- [ ] Repeating tasks Backend
+  - [X] Get, Set
+  - [ ] Handle on complete, etc.
+- [ ] GUI
+  - [ ] "read" (Repeats every 5 days)
+  - [ ] "write"
